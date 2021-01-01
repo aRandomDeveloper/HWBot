@@ -105,7 +105,7 @@ client.on('ready', function(){
                           case "profile":
                               message.reply("Send the link to the picture now!")
                             var filter = m => m.content.includes('.') && m.author.id === message.author.id;
-                            var collector = message.channel.createMessageCollector(filter, { time: 2000 });
+                            var collector = message.channel.createMessageCollector(filter, { time: 10000 });
                             
                             collector.on('collect', function(m) {
                                 console.log(`Collected ${m.content}`);
