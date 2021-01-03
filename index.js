@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const fs = require('fs');
 const dotenv = require('dotenv');
-
+const JSONIFIER = require("jsonfile");
 const fPath = "./"
 //one time declare files
 const fileFunc = require(fPath + "fileFunc.js")
@@ -29,19 +29,21 @@ var betaTesting = true;
 //--------------------------------------------------------------------------------------------
 var PREFIX;
 var token;
-if(betaTesting === true){
-     PREFIX = "hw2";
-    token = process.env.BETA_TOKEN;
-} else {
-   PREFIX = "hw";
+if(betaTesting === false){
+     PREFIX = "TEIF";
     token = process.env.TOKEN;
+    console.log("alpha login")
+} else {
+   PREFIX = "hw2";
+   token = process.env.BETA_TOKEN;
+   console.log("beta login")
 }
 
 
 client.on('ready', function(){
    
     console.log("Logged in!")
-    client.user.setActivity(PREFIX + ' help to suffer', { type: 'PLAYING' })
+    client.user.setActivity("Want to feel pain? Type " + PREFIX, { type: 'PLAYING' })
     
  
  
@@ -61,9 +63,24 @@ client.on('ready', function(){
    var value;
          
       client.on('message', function (message) {
-        
+        let serverPath = "./data/server" + message.guild.id + ".json";
+          try{
+       
+        let serverData = JSON.parse(fs.readFileSync(serverPath, "utf-8"))
           
-    var msg = message.content.toLowerCase();
+          serverPrefix = serverData.PREFIX;
+        } catch (e){
+            
+        }
+    
+          
+        
+         
+          
+                       /* other bot command */
+                       var msg = message.content.toLowerCase();  
+    if (msg.startsWith(PREFIX) || msg.startsWith(serverPrefix)) {
+     
          var allParams = msg.split(" ");
             var command = allParams[1];
     
@@ -78,31 +95,21 @@ client.on('ready', function(){
           exports.sender = sender;
           //command specific values
          var transferring = false;
-          let path = "data/dataForIdUser"+ sender + ".txt";
           
-        
-          /* ---------------------------------traansferred money-----------------------------------*/
-          
-                       /* other bot command */
-            
-    if (msg.startsWith(PREFIX)) {
         console.log(command)
         switch(command) {
             case "init":
-                var serverPath = "server" + message.guild.id;
-                try {
-                    if (!fs.existsSync()) {
-                      fs.mkdirSync(folderName)
-                      fs.rmdir(folderName, { recursive: true })
-                    }
-                  } catch (err) {
-                    console.log("Folder does not exist")
-                    fs.mkdirSync(folderName)
-                  }
+               fs.writeFile(serverPath, JSON.stringify({}), function(e){
+                  
+                   
+               })
+               message.channel.send("Done!")
+                  break;
                   case "intro":
-                      message.channel.send("Hi, i am HWBot, another tool for increasing the powers of a totalitarian regime!")
-                      case "avatar":
-                          case "profile":
+                      message.channel.send("Hi, I am The Earth Is Flat Bot, another tool for increasing the powers of a totalitarian regime!")
+                      break;
+                case "avatar":
+                case "profile":
                               message.reply("Send the link to the picture now!")
                             var filter = m => m.content.includes('.') && m.author.id === message.author.id;
                             var collector = message.channel.createMessageCollector(filter, { time: 10000 });
@@ -118,7 +125,43 @@ client.on('ready', function(){
                             });
                             
                              
-                
+                break;
+                case "hwgay":
+                    var t1 = 0;
+                   
+                    message.channel.send("<@781064004122443806> is gay")
+                    while(t1 < 5){
+                        
+                        message.channel.send("<@781064004122443806> is gay")
+                    }
+                    break;
+                case "prefix":
+                   
+
+            // First argument is a filter function - which is made of conditions
+            // m is a 'Message' object
+            message.reply("Type the prefix you want now!")
+            message.channel.awaitMessages(m => m.author.id == message.author.id,
+                    {max: 1, time: 15000}).then(function(collected) {
+                            // only accept messages by the user who sent the command
+                            // accept only 1 message, and return the promise after 30000ms = 30s
+                           
+                            // first (and, in this case, only) message of the collection
+                            var data1 = fs.readFileSync(serverPath, "utf-8")
+                            
+                            var serverData = JSON.parse(data1);
+                            serverData.PREFIX = collected.first().content.toLowerCase();
+                           
+                            fs.writeFile(serverPath, JSON.stringify(serverData), function (err) {
+                                if (err) {console.log(err); message.channel.send("Error saving your prefix.")} else {message.channel.send("Done!")}
+                              })
+
+                                   
+                            })
+
+                    
+                    break;
+                default: message.reply("Stop calling me for no reason you idiot")
                           }
 
 
@@ -129,24 +172,12 @@ client.on('ready', function(){
     )
 
   /* ---------------------------------------------------function lists -------------------------------------------------------------------------
-  -------------------------------------------------fs functions ------------------------------------------------------------
 */
 
-
-   
-  
-
-      /* end of fs functions */
-          
-          
-          
- 
-function gay(path){if(fileFunc.getInfo(path, "donator") == 1){
-                             return "Awesome, you're a donator! Thanks for supporting us!"
-                             } else {
-                                 return "*insert sarcastic reply because my creator hasnt added one*"
-                             }}
-
+function mentionUser(mention){
+    var returner = "<@" + mention + ">";
+    return returner;
+}
     /*------------------------END OF FUNCTION LISTS---------------------------------*/
  
 //const Firebase = require("/__/firebase/8.0.0/firebase-app.js");
