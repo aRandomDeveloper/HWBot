@@ -24,16 +24,16 @@ const fileFunc = require(fPath + "fileFunc.js")
 
 dotenv.config();
 //--------------------------------ONE TIME TOGGLE FOR BETA------------------------------------
-var betaTesting = false;
+var betaTesting = true;
 //--------------------------------------------------------------------------------------------
 var PREFIX;
 var token;
 if(betaTesting === false){
-     PREFIX = "TEIF";
+     PREFIX = "teif";
     token = process.env.TOKEN;
     console.log("alpha login")
 } else {
-   PREFIX = "hw2";
+   PREFIX = "teif2";
    token = process.env.BETA_TOKEN;
    console.log("beta login")
 }
@@ -62,14 +62,14 @@ client.on('ready', function(){
    var value;
          
       client.on('message', function (message) {
+        
         let serverPath = "./data/server" + message.guild.id + ".json";
           try{
        
-        let serverData = JSON.parse(fs.readFileSync(serverPath, "utf-8"))
-          
-          serverPrefix = serverData.PREFIX;
+        var serverData = JSON.parse(fs.readFileSync(serverPath, "utf-8"))
+          var serverPrefix = serverData.PREFIX;
         } catch (e){
-            
+           var serverPrefix = "teif2" 
         }
     
           
