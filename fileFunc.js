@@ -8,24 +8,12 @@ function nthIndex(str, pat, n){
     }
     return i;
 }
-const getData = function(path, query){
+const getData = function(path){
     try{
     var userData = fs.readFileSync(path, 'utf8', function(err){console.log(error);})
-   
-        
-        
+   return JSON.parse(userData)
              //read the userData
               console.log(userData);
-
-           
-                    
-var filteredData = parseInt(userData.substring(userData.indexOf(query) + query.length, userData.indexOf(div, userData.indexOf(query))));
-    //console.log("balanceToPayout" + pseudobalanceToPayout)
-          
-                    
-
-           return filteredData;
-       
         }
         
            
@@ -33,11 +21,8 @@ var filteredData = parseInt(userData.substring(userData.indexOf(query) + query.l
     console.log(err);
 }}
 
-const init = function(path){
-    
-   
-
-
+const saveData = function(path, data){
+    fs.writeFileSync(path, JSON.stringify(data), function(e){console.log(e)})
 }
 exports.getData = getData;
-exports.init = init;
+exports.saveData = saveData;
