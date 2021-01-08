@@ -396,6 +396,8 @@ client.on('ready', function(){
                                                     setTimeout(function(){
                                                         client.login(token)
                                                         message.channel.send("Done!")
+                                                         client.user.setActivity("Type " + PREFIX + " tutorial to learn how to set up an event!", { type: 'PLAYING' })
+                                                    
                                                     }, 1500)
                                                 }
                                                 break;
