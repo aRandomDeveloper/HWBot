@@ -71,7 +71,7 @@ client.on('ready', function(){
         
       client.on('message', function (message) {
         
-        let serverPath = "./data/server" + message.guild.id + ".json";
+        let serverPath = "../data/server" + message.guild.id + ".json";
           try{
        
         var serverData = JSON.parse(fs.readFileSync(serverPath, "utf-8"))
@@ -109,46 +109,97 @@ client.on('ready', function(){
                 case "reset":
                 case "initialise":
                 case "init":
+                    try{
+                        
                 if(message.member.roles.cache.find(r => r.id === serverData.modrole)){
-                message.reply("Are you sure you want to reset your server data? Type 'yes' to confirm!")
-                message.channel.awaitMessages(m => m.author.id == message.author.id,
-                        {max: 1, time: 15000}).then(function(collected) {
-                                // only accept messages by the user who sent the command
-                                // accept only 1 message, and return the promise after 30000ms = 30s
-                               
-                                // first (and, in this case, only) message of the collection
-                                
-                               if(collected.first().content.match(/yes/gi) ){
-                                   var template = {};
-                                   template.modrole = message.guild.roles.everyone.id;
-                                   fs.writeFile(serverPath, JSON.stringify(template), function(e){
-                                       if(e != undefined){
-                                           console.log(e)
-                                       }
-                                   })
-                                   message.channel.send("Done!")  
-                               } else {
-                                   message.channel.send("Operation Canceled.")
-                               }
-                               message.channel.send("Set a lockout password! This will help you to access the bot even after you get locked out. \n \n Keep your password somewhere safe. \n Type your password now!")
-                               message.channel.awaitMessages(m => m.author.id == message.author.id,
-                                {max: 1, time: 15000}).then(function(collected) {
-                                        // only accept messages by the user who sent the command
-                                        // accept only 1 message, and return the promise after 30000ms = 30s
-                                       
-                                        // first (and, in this case, only) message of the collection
-                                        
-                                       var lockout = collected.first().content;
-                                       serverData.lockout = lockout;
-                                       fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
-                                           console.log(e)
+                    console.log("successful")
+                    message.reply("Are you sure you want to reset your server data? Type 'yes' to confirm!")
+                    message.channel.awaitMessages(m => m.author.id == message.author.id,
+                            {max: 1, time: 15000}).then(function(collected) {
+                                    // only accept messages by the user who sent the command
+                                    // accept only 1 message, and return the promise after 30000ms = 30s
+                                   
+                                    // first (and, in this case, only) message of the collection
+                                    
+                                   if(collected.first().content.match(/yes/gi) ){
+                                       var template = {};
+                                       template.modrole = message.guild.roles.everyone.id;
+                                       fs.writeFile(serverPath, JSON.stringify(template), function(e){
+                                           if(e != undefined){
+                                               console.log(e)
+                                           }
                                        })
-                                       message.channel.send("Done!")
+                                      
+                                   } else {
+                                       message.channel.send("Operation Canceled.")
+                                   }
+                                   message.channel.send("Now set a lockout password! This will help you to access the bot even after you get locked out. \n \n Keep your password somewhere safe. \n Type your password now!")
+                                   message.channel.awaitMessages(m => m.author.id == message.author.id,
+                                    {max: 1, time: 15000}).then(function(collected) {
+                                            // only accept messages by the user who sent the command
+                                            // accept only 1 message, and return the promise after 30000ms = 30s
+                                           
+                                            // first (and, in this case, only) message of the collection
                                             
-                                        })  
-                                })
+                                           var lockout = collected.first().content;
+                                           serverData.lockout = lockout;
+                                           fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
+                                               console.log(e)
+                                           })
+                                           message.channel.send("Done!")
+                                                
+                                            })  
+                                    })
                
-                            } else {message.channel.send("Don't access an admin command, you clever little thing you.")}
+                            } else {message.channel.send("Don't access an admin command, you clever little thing you.")}}
+                            catch (e){
+                                
+                                message.reply("Thanks for choosing Eventor as your preferred event hosting bot!\nTo confirm that you want to create a server account, type **confirm**!")
+                                message.channel.awaitMessages(m => m.author.id == message.author.id,
+                                        {max: 1, time: 15000}).then(function(collected) {
+                                                // only accept messages by the user who sent the command
+                                                // accept only 1 message, and return the promise after 30000ms = 30s
+                                               
+                                                // first (and, in this case, only) message of the collection
+                                                
+                                               if(collected.first().content.match(/confirm/gi) ){
+                                                   var template = {};
+                                                   template.modrole = message.guild.roles.everyone.id;
+                                                   fs.writeFile(serverPath, JSON.stringify(template), function(e){
+                                                       if(e != undefined){
+                                                           console.log(e)
+                                                       }
+                                                   })
+                                                   
+                                               } else {
+                                                   message.channel.send("Account Initiation Canceled.")
+                                               }
+                                               message.channel.send("Now set a lockout password! This will help you to access the bot even after you get locked out. \n \n Keep your password somewhere safe. \n Type your password now!")
+                                               message.channel.awaitMessages(m => m.author.id == message.author.id,
+                                                {max: 1, time: 15000}).then(function(collected) {
+                                                        // only accept messages by the user who sent the command
+                                                        // accept only 1 message, and return the promise after 30000ms = 30s
+                                                       
+                                                        // first (and, in this case, only) message of the collection
+                                                        
+                                                       var lockout = collected.first().content;
+                                                       var newserverData;
+                                                       fs.readFile(serverPath, "utf-8", function(e, data){
+                                                           console.log(e)
+                                                           console.log(data)
+                                                           newserverData = JSON.parse(data);
+                                                           console.log("executing" + newserverData)
+                                                       newserverData.lockout = lockout;
+                                                       fs.writeFile(serverPath, JSON.stringify(newserverData), function(e){
+                                                           console.log(e)
+                                                       })
+                                                       message.channel.send("Done!")
+                                                       })
+                                                       
+                                                            
+                                                        })  
+                                                })
+                            }
                   break;
                   case "intro":
                       message.channel.send("Hi, I am Eventor, a tool for hosting serverwide events!")
@@ -335,6 +386,19 @@ client.on('ready', function(){
                                                             
                                                         })
                                             break;
+                                            case "reboot":
+                                                if(message.author.id = process.env.OWNERID){
+                                                    client.user.setActivity("Rebooting...", { type: 'PLAYING' })
+                                                    console.log("Booting...")
+                                                    message.channel.send("Rebooting...")
+                                                    client.destroy;
+                                                   
+                                                    setTimeout(function(){
+                                                        client.login(token)
+                                                        message.channel.send("Done!")
+                                                    }, 15000)
+                                                }
+                                                break;
                 default: 
                           }
 
@@ -362,4 +426,4 @@ function mentionUser(mention){
 //const FirebaseInit = require("/__/firebase/init.js");
 // Log our bot in using the token from https://discord.com/developers/applications
 
-client.login(process.env.TOKEN)
+client.login(token)
