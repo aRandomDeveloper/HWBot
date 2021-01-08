@@ -396,7 +396,7 @@ client.on('ready', function(){
                                                     setTimeout(function(){
                                                         client.login(token)
                                                         message.channel.send("Done!")
-                                                    }, 15000)
+                                                    }, 1500)
                                                 }
                                                 break;
                 default: 
