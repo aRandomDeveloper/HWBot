@@ -289,6 +289,7 @@ client.on('ready', function(){
                     while(t1 < 5){
                         
                         message.channel.send("<@781064004122443806> is gay")
+                       t1++;
                     }
                     break;
                 case "prefix":
